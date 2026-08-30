@@ -8,6 +8,13 @@ class Document:
     content: str
 
 
+@dataclass
+class DocumentChunk:
+    document_path: Path
+    index: int
+    content: str
+
+
 def load_markdown_files(directory: str | Path) -> list[Document]:
     directory_path = Path(directory)
 
@@ -22,3 +29,41 @@ def load_markdown_files(directory: str | Path) -> list[Document]:
             documents.append(Document(path=file_path, content=content))
 
     return documents
+
+
+def split_document(document: Document) -> list[DocumentChunk]:
+    chunks: list[DocumentChunk] = []
+
+    for part in document.content.split("\n\n"):
+        content = part.strip()
+
+        if content:
+            chunks.append(
+                DocumentChunk(
+                    document_path=document.path,
+                    index=len(chunks),
+                    content=content,
+                )
+            )
+
+    return chunks
+
+
+def split_documents(documents: list[Document]) -> list[DocumentChunk]:
+    chunks: list[DocumentChunk] = []
+
+    for document in documents:
+        chunks.extend(split_document(document))
+
+    return chunks
+
+
+if __name__ == "__main__":
+    documents = load_markdown_files("documents")
+    chunks = split_documents(documents)
+
+    for chunk in chunks:
+        print(f"Path: {chunk.document_path}")
+        print(f"Index: {chunk.index}")
+        print(chunk.content)
+        print()
