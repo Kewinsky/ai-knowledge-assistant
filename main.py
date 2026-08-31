@@ -1,3 +1,5 @@
+import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,6 +15,12 @@ class DocumentChunk:
     document_path: Path
     index: int
     content: str
+
+
+@dataclass
+class SearchResult:
+    chunk: DocumentChunk
+    score: int
 
 
 def load_markdown_files(directory: str | Path) -> list[Document]:
@@ -58,12 +66,64 @@ def split_documents(documents: list[Document]) -> list[DocumentChunk]:
     return chunks
 
 
-if __name__ == "__main__":
-    documents = load_markdown_files("documents")
-    chunks = split_documents(documents)
+def tokenize(text: str) -> set[str]:
+    return set(re.findall(r"\w+", text.lower()))
+
+
+def score_chunk(query_tokens: set[str], chunk: DocumentChunk) -> int:
+    chunk_tokens = tokenize(chunk.content)
+    return len(query_tokens & chunk_tokens)
+
+
+def search_chunks(
+    query: str,
+    chunks: list[DocumentChunk],
+    limit: int = 3,
+) -> list[SearchResult]:
+    if limit <= 0:
+        return []
+
+    query_tokens = tokenize(query)
+
+    if not query_tokens:
+        return []
+
+    results: list[SearchResult] = []
 
     for chunk in chunks:
-        print(f"Path: {chunk.document_path}")
-        print(f"Index: {chunk.index}")
-        print(chunk.content)
-        print()
+        score = score_chunk(query_tokens, chunk)
+
+        if score > 0:
+            results.append(SearchResult(chunk, score))
+
+    def sort_key(result: SearchResult) -> tuple[int, str, int]:
+        return (
+            -result.score,
+            str(result.chunk.document_path),
+            result.chunk.index,
+        )
+
+    results.sort(key=sort_key)
+
+    return results[:limit]
+
+
+if __name__ == "__main__":
+    query = " ".join(sys.argv[1:]).strip()
+
+    if not query:
+        print("Usage: python3 main.py <question>")
+    else:
+        documents = load_markdown_files("documents")
+        chunks = split_documents(documents)
+        results = search_chunks(query, chunks)
+
+        if not results:
+            print("No matching documents found.")
+        else:
+            for result in results:
+                print(f"Score: {result.score}")
+                print(f"Source: {result.chunk.document_path}")
+                print(f"Chunk: {result.chunk.index}")
+                print(result.chunk.content)
+                print()
