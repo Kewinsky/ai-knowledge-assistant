@@ -25,3 +25,9 @@ class SearchResult:
 class EmbeddedChunk:
     chunk: DocumentChunk
     embedding: list[float]
+
+
+@dataclass
+class SemanticSearchResult:
+    chunk: DocumentChunk
+    score: float
