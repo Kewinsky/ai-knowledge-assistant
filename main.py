@@ -24,15 +24,17 @@ def main() -> None:
 
     print("Answer:")
     print(rag_answer.text)
-    print()
-    print("Sources:")
 
-    for result in rag_answer.sources:
-        chunk = result.chunk
-        print(
-            f"- {chunk.document_path}#chunk-{chunk.index} "
-            f"(score: {result.score:.4f})"
-        )
+    if rag_answer.sources:
+        print()
+        print("Sources:")
+
+        for result in rag_answer.sources:
+            chunk = result.chunk
+            print(
+                f"- {chunk.document_path}#chunk-{chunk.index} "
+                f"(score: {result.score:.4f})"
+            )
 
 
 if __name__ == "__main__":
