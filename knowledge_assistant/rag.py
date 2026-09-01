@@ -6,6 +6,10 @@ from knowledge_assistant.models import DocumentChunk, RagAnswer
 from knowledge_assistant.vector_search import semantic_search
 
 
+MIN_SIMILARITY_SCORE = 0.5
+INSUFFICIENT_CONTEXT_ANSWER = "I don't know based on the available documents."
+
+
 def answer_question(
     client: OpenAI,
     question: str,
@@ -26,9 +30,19 @@ def answer_question(
     embedded_chunks = embed_chunks(client, chunks)
     query_embedding = create_embeddings(client, [stripped_question])[0]
     results = semantic_search(query_embedding, embedded_chunks, limit)
-    answer = generate_answer(client, stripped_question, results)
+    relevant_results = [
+        result for result in results if result.score >= MIN_SIMILARITY_SCORE
+    ]
+
+    if not relevant_results:
+        return RagAnswer(
+            text=INSUFFICIENT_CONTEXT_ANSWER,
+            sources=[],
+        )
+
+    answer = generate_answer(client, stripped_question, relevant_results)
 
     return RagAnswer(
         text=answer,
-        sources=results,
+        sources=relevant_results,
     )
