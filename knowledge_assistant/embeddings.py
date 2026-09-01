@@ -5,6 +5,7 @@ from knowledge_assistant.models import DocumentChunk, EmbeddedChunk
 
 
 EMBEDDING_MODEL = "text-embedding-3-small"
+EMBEDDING_DIMENSIONS = 1536
 
 
 def create_embeddings(
@@ -20,6 +21,7 @@ def create_embeddings(
     response = client.embeddings.create(
         model=EMBEDDING_MODEL,
         input=texts,
+        dimensions=EMBEDDING_DIMENSIONS,
     )
 
     if len(response.data) != len(texts):

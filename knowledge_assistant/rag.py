@@ -1,6 +1,7 @@
 from openai import OpenAI
 
-from knowledge_assistant.embeddings import create_embeddings, embed_chunks
+from knowledge_assistant.embedding_cache import load_or_create_embeddings
+from knowledge_assistant.embeddings import create_embeddings
 from knowledge_assistant.generation import generate_answer
 from knowledge_assistant.models import DocumentChunk, RagAnswer
 from knowledge_assistant.vector_search import semantic_search
@@ -27,7 +28,7 @@ def answer_question(
     if limit <= 0:
         raise ValueError("Limit must be greater than zero")
 
-    embedded_chunks = embed_chunks(client, chunks)
+    embedded_chunks = load_or_create_embeddings(client, chunks)
     query_embedding = create_embeddings(client, [stripped_question])[0]
     results = semantic_search(query_embedding, embedded_chunks, limit)
     relevant_results = [
