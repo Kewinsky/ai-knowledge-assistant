@@ -19,3 +19,9 @@ class DocumentChunk:
 class SearchResult:
     chunk: DocumentChunk
     score: int
+
+
+@dataclass
+class EmbeddedChunk:
+    chunk: DocumentChunk
+    embedding: list[float]

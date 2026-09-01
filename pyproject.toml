@@ -3,4 +3,6 @@ name = "ai-engineering-knowledge-assistant"
 version = "0.1.0"
 description = "A knowledge assistant for learning AI engineering"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "openai>=3.6.0",
+]
