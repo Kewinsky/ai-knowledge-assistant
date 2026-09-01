@@ -31,3 +31,9 @@ class EmbeddedChunk:
 class SemanticSearchResult:
     chunk: DocumentChunk
     score: float
+
+
+@dataclass
+class RagAnswer:
+    text: str
+    sources: list[SemanticSearchResult]
