@@ -10,6 +10,7 @@ from openai import (
     RateLimitError,
 )
 
+from knowledge_assistant.config import load_config
 from knowledge_assistant.documents import load_markdown_files, split_documents
 from knowledge_assistant.rag import answer_question
 
@@ -21,18 +22,27 @@ def main() -> int:
         print("Usage: python3 main.py <question>", file=sys.stderr)
         return 2
 
+    try:
+        config = load_config()
+    except ValueError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+
     if not os.environ.get("OPENAI_API_KEY", "").strip():
         print("Error: missing or invalid OpenAI API key.", file=sys.stderr)
         return 1
 
     try:
-        documents = load_markdown_files("documents")
+        documents = load_markdown_files(config.documents_directory)
         chunks = split_documents(documents)
         client = OpenAI()
         rag_answer = answer_question(
             client,
             query,
             chunks,
+            limit=config.result_limit,
+            min_similarity_score=config.min_similarity_score,
+            cache_path=config.cache_path,
         )
     except AuthenticationError:
         print("Error: missing or invalid OpenAI API key.", file=sys.stderr)

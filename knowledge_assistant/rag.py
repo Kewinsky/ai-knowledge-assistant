@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from openai import OpenAI
 
 from knowledge_assistant.embedding_cache import load_or_create_embeddings
@@ -16,6 +18,8 @@ def answer_question(
     question: str,
     chunks: list[DocumentChunk],
     limit: int = 3,
+    min_similarity_score: float = MIN_SIMILARITY_SCORE,
+    cache_path: Path = Path(".cache/embeddings.json"),
 ) -> RagAnswer:
     stripped_question = question.strip()
 
@@ -28,11 +32,14 @@ def answer_question(
     if limit <= 0:
         raise ValueError("Limit must be greater than zero")
 
-    embedded_chunks = load_or_create_embeddings(client, chunks)
+    if not -1.0 <= min_similarity_score <= 1.0:
+        raise ValueError("Minimum similarity score must be between -1.0 and 1.0")
+
+    embedded_chunks = load_or_create_embeddings(client, chunks, cache_path)
     query_embedding = create_embeddings(client, [stripped_question])[0]
     results = semantic_search(query_embedding, embedded_chunks, limit)
     relevant_results = [
-        result for result in results if result.score >= MIN_SIMILARITY_SCORE
+        result for result in results if result.score >= min_similarity_score
     ]
 
     if not relevant_results:

@@ -20,19 +20,22 @@ def create_chunk() -> DocumentChunk:
 
 
 @pytest.mark.parametrize(
-    ("question", "chunks", "limit"),
+    ("question", "chunks", "limit", "min_similarity_score"),
     [
-        ("", [create_chunk()], 3),
-        ("   ", [create_chunk()], 3),
-        ("What is Python?", [], 3),
-        ("What is Python?", [create_chunk()], 0),
-        ("What is Python?", [create_chunk()], -1),
+        ("", [create_chunk()], 3, 0.5),
+        ("   ", [create_chunk()], 3, 0.5),
+        ("What is Python?", [], 3, 0.5),
+        ("What is Python?", [create_chunk()], 0, 0.5),
+        ("What is Python?", [create_chunk()], -1, 0.5),
+        ("What is Python?", [create_chunk()], 3, -1.1),
+        ("What is Python?", [create_chunk()], 3, 1.1),
     ],
 )
 def test_invalid_input_raises_before_api_calls(
     question: str,
     chunks: list[DocumentChunk],
     limit: int,
+    min_similarity_score: float,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     mocks = [Mock(), Mock(), Mock(), Mock()]
@@ -42,7 +45,13 @@ def test_invalid_input_raises_before_api_calls(
     monkeypatch.setattr(rag, "generate_answer", mocks[3])
 
     with pytest.raises(ValueError):
-        rag.answer_question(Mock(), question, chunks, limit)
+        rag.answer_question(
+            Mock(),
+            question,
+            chunks,
+            limit,
+            min_similarity_score,
+        )
 
     for function_mock in mocks:
         function_mock.assert_not_called()
@@ -53,6 +62,7 @@ def test_success_uses_stripped_question_and_relevant_results(
 ) -> None:
     client = Mock()
     chunk = create_chunk()
+    cache_path = Path("custom-cache/embeddings.json")
     embedded_chunks = [EmbeddedChunk(chunk=chunk, embedding=[1.0, 0.0])]
     relevant_result = SemanticSearchResult(chunk=chunk, score=0.8)
     irrelevant_result = SemanticSearchResult(chunk=chunk, score=0.4)
@@ -67,8 +77,16 @@ def test_success_uses_stripped_question_and_relevant_results(
     monkeypatch.setattr(rag, "semantic_search", semantic_search_mock)
     monkeypatch.setattr(rag, "generate_answer", generate_answer_mock)
 
-    answer = rag.answer_question(client, "  What is Python?  ", [chunk])
+    answer = rag.answer_question(
+        client,
+        "  What is Python?  ",
+        [chunk],
+        limit=3,
+        min_similarity_score=0.7,
+        cache_path=cache_path,
+    )
 
+    load_embeddings_mock.assert_called_once_with(client, [chunk], cache_path)
     create_embeddings_mock.assert_called_once_with(client, ["What is Python?"])
     semantic_search_mock.assert_called_once_with(
         [1.0, 0.0],
@@ -113,4 +131,3 @@ def test_no_relevant_results_returns_fallback_without_generation(
     assert answer.text == rag.INSUFFICIENT_CONTEXT_ANSWER
     assert answer.sources == []
     generate_answer_mock.assert_not_called()
-
