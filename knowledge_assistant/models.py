@@ -37,3 +37,22 @@ class SemanticSearchResult:
 class RagAnswer:
     text: str
     sources: list[SemanticSearchResult]
+
+
+@dataclass(frozen=True)
+class EvaluationCase:
+    question: str
+    expected_source: Path
+
+
+@dataclass
+class EvaluationResult:
+    case: EvaluationCase
+    retrieved_sources: list[Path]
+    hit: bool
+
+
+@dataclass
+class EvaluationSummary:
+    results: list[EvaluationResult]
+    hit_rate: float

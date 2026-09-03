@@ -1,0 +1,22 @@
+[
+  {
+    "question": "Jak tekst może zostać przedstawiony jako liczby?",
+    "expected_source": "documents/embeddings.md"
+  },
+  {
+    "question": "Jak znaleźć podobne znaczeniowo fragmenty?",
+    "expected_source": "documents/vector-search.md"
+  },
+  {
+    "question": "Po co dzielić dokument na mniejsze części?",
+    "expected_source": "documents/chunking.md"
+  },
+  {
+    "question": "Jak działa pobieranie kontekstu przed odpowiedzią modelu?",
+    "expected_source": "documents/rag.md"
+  },
+  {
+    "question": "Do czego wykorzystuje się środowiska wirtualne?",
+    "expected_source": "documents/python.md"
+  }
+]
