@@ -2329,3 +2329,171 @@ Nie należy dostosowywać systemu tylko do kilku znanych pytań. Mogłoby to pop
 - **MRR** — metryka uwzględniająca pozycję pierwszego poprawnego wyniku.
 - **NDCG** — metryka rankingu uwzględniająca pozycję i stopień trafności wyników.
 - **Dataset leakage** — sytuacja, w której system został zbyt mocno dostrojony do znanego zestawu ewaluacyjnego.
+
+---
+
+## Ticket 16: test regresyjny retrievalu na golden datasecie
+
+### Cel testu regresyjnego
+
+Regresja występuje wtedy, gdy wcześniej działający retrieval zostaje przypadkowo pogorszony przez kolejną zmianę. Przykładem może być odwrócenie kolejności sortowania, błędne połączenie pytań z embeddingami albo zmiana sposobu obliczania podobieństwa.
+
+Test regresyjny uruchamia prawdziwy lokalny przepływ retrievalu na kontrolowanych danych (wektorach) i wymaga:
+
+```python
+assert all(result.hit for result in summary.results)
+assert summary.hit_rate == 1.0
+```
+
+Jeśli ranking lub oczekiwane źródła przestaną się zgadzać, test zakończy się błędem.
+
+### Golden dataset i golden vectors
+
+Golden dataset to zaakceptowany zestaw danych referencyjnych:
+
+```text
+pytanie -> oczekiwany dokument
+```
+
+Pytania i oczekiwane źródła nadal pochodzą z `evaluation/questions.json`. Ticket 16 dodaje `evaluation/golden_vectors.json`, który zawiera małe, statyczne wektory dla dokumentów i pytań.
+
+Przykład:
+
+```text
+pytanie o embeddingi: [1, 0, 0, 0, 0]
+documents/embeddings.md: [1, 0, 0, 0, 0]
+documents/python.md: [0, 0, 0, 0, 1]
+```
+
+Prawdziwy `semantic_search()` obliczy podobieństwo pytania do `embeddings.md` jako `1.0`, a do `python.md` jako `0.0`. Dzięki temu oczekiwany ranking jest znany z góry.
+
+Golden vectors są:
+
+- zapisane na stałe w repozytorium,
+- małe i deterministyczne,
+- niezależne od sieci i klucza API,
+- jednakowe przy każdym uruchomieniu testu.
+
+### Co jest mockowane?
+
+Mockowane są wyłącznie dwie funkcje odpowiedzialne za dostarczenie embeddingów:
+
+```python
+evaluation.load_or_create_embeddings
+evaluation.create_embeddings
+```
+
+Normalnie funkcje te korzystają z cache albo API OpenAI. W teście `monkeypatch` podmienia je na funkcje pobierające wektory z `golden_vectors.json`.
+
+```text
+normalnie: tekst -> OpenAI -> embedding
+w teście: tekst -> golden_vectors.json -> embedding
+```
+
+Mock jest potrzebny, ponieważ chcemy kontrolować dokładne wartości wektorów, uniknąć kosztów i zapewnić taki sam wynik przy każdym uruchomieniu.
+
+### Co pozostaje prawdziwe?
+
+Test nie mockuje:
+
+- `load_markdown_files()`,
+- `split_documents()`,
+- `load_evaluation_cases()`,
+- `evaluate_retrieval()`,
+- `semantic_search()`,
+- cosine similarity,
+- sortowania i wyboru top-k,
+- obliczania Hit@k.
+
+Pełny przepływ testu wygląda tak:
+
+```text
+documents/
+    -> prawdziwy loader
+    -> prawdziwy chunking
+    -> statyczne embeddingi dokumentów
+
+questions.json
+    -> prawdziwy loader przypadków
+    -> statyczne embeddingi pytań
+
+embeddingi
+    -> prawdziwy semantic_search
+    -> prawdziwe sortowanie i top-k
+    -> prawdziwy evaluate_retrieval
+    -> sprawdzenie hit_rate == 1.0
+```
+
+### Co wykrywa ten test?
+
+Test może wykryć między innymi:
+
+- odwrócenie kolejności rankingu,
+- błędne obliczanie cosine similarity,
+- niepoprawne zastosowanie limitu top-k,
+- pomieszanie kolejności embeddingów pytań,
+- błędne porównywanie ścieżek dokumentów,
+- zmianę oczekiwanego źródła,
+- pominięcie któregoś przypadku ewaluacyjnego,
+- niepoprawne obliczenie hit rate.
+
+### Dlaczego wektory nie mogą powstawać z `expected_source`?
+
+Test nie może podczas wykonania tworzyć wektora pytania na podstawie oczekiwanego dokumentu:
+
+```text
+question_vector = document_vectors[expected_source]
+```
+
+Taki test sam konstruowałby poprawną odpowiedź i mógłby zawsze przechodzić. Nawet błędna zmiana `expected_source` automatycznie zmieniłaby wtedy wektor pytania.
+
+Wektory są więc zapisane niezależnie w `golden_vectors.json`. Jeśli ktoś zmieni oczekiwane źródło bez zmiany golden vectora, retrieval nadal wskaże poprzedni dokument i test poprawnie wykryje regresję.
+
+### Test regresyjny a `evaluate.py`
+
+Oba rozwiązania korzystają z `evaluate_retrieval()`, ale mają inny cel:
+
+| Test regresyjny | `evaluate.py` |
+|---|---|
+| używa sztucznych golden vectors | używa prawdziwych embeddingów OpenAI |
+| jest deterministyczny | zależy od zewnętrznego modelu i API |
+| działa bez internetu i klucza | wymaga internetu i klucza API |
+| jest darmowy i uruchamia się w `pytest` | wykonuje płatne requesty |
+| sprawdza naszą implementację rankingu | mierzy rzeczywistą jakość semantyczną retrievalu |
+| nie ocenia rozumienia tekstu przez model | ocenia cały retrieval razem z modelem embeddingowym |
+
+Test regresyjny odpowiada na pytanie:
+
+> Czy nasz kod poprawnie przetwarza znane wektory i nadal tworzy zaakceptowany ranking?
+
+`evaluate.py` odpowiada na inne pytanie:
+
+> Czy rzeczywisty model embeddingowy znajduje semantycznie właściwe dokumenty dla naszych pytań?
+
+### Ograniczenia golden vectors
+
+Golden test nie mierzy jakości modelu OpenAI, ponieważ wartości embeddingów zostały przygotowane ręcznie. Nie wykryje pogorszenia jakości zewnętrznego modelu ani tego, że prawdziwy embedding błędnie interpretuje znaczenie pytania.
+
+W obecnym zestawie każdy chunk danego dokumentu otrzymuje ten sam wektor. Test sprawdza więc wyszukiwanie właściwego dokumentu, ale nie ocenia, który fragment tego dokumentu jest najbardziej trafny.
+
+Dlatego potrzebne są oba mechanizmy:
+
+```text
+test regresyjny -> szybka i deterministyczna ochrona kodu
+evaluate.py     -> rzeczywisty pomiar jakości semantycznej
+```
+
+### Ważna zasada aktualizacji golden datasetu
+
+Nie należy automatycznie zmieniać golden vectors tylko po to, aby zepsuty test ponownie przeszedł. Najpierw trzeba ustalić, czy zmieniły się wymagania, czy pojawiła się rzeczywista regresja.
+
+Golden dataset jest zaakceptowanym punktem odniesienia. Jego zmiana powinna być świadomą decyzją podlegającą review.
+
+### Keywords
+
+- **Regression test** — test wykrywający pogorszenie wcześniej zaakceptowanego zachowania.
+- **Golden dataset** — stały zestaw wejść i oczekiwanych rezultatów.
+- **Golden vectors** — zapisane na stałe wektory używane jako kontrolowane dane testowe.
+- **Deterministyczność** — te same dane wejściowe zawsze prowadzą do tego samego wyniku.
+- **Mock** — kontrolowany zamiennik prawdziwej zależności.
+- **Test fixture** — przygotowane dane wykorzystywane podczas testu.

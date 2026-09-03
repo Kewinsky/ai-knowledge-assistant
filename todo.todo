@@ -1,34 +1,34 @@
 # AI Engineering Knowledge Assistant — tickets
-- [x] Ticket 1: Load Markdown documents from a directory
-- [x] Ticket 2: Represent documents with a `Document` dataclass
-- [x] Ticket 3: Split documents into `DocumentChunk` objects
-- [x] Ticket 4: Add simple keyword-based text search
-- [x] Ticket 5: Split the application into Python modules
-- [x] Ticket 6: Configure the project and virtual environment with `uv`
-- [x] Ticket 7: Generate document chunk embeddings with OpenAI
-- [x] Ticket 8: Add semantic search using cosine similarity
-- [x] Ticket 9: Generate grounded answers from retrieved context
-- [x] Ticket 10: Connect retrieval and generation into a complete RAG flow
-- [x] Ticket 11: Cache document embeddings on disk
-- [x] Ticket 12: Handle API errors and CLI exit codes
-- [x] Ticket 13: Add unit tests without real API requests
-- [x] Ticket 14: Configure operational settings with environment variables
-- [ ] Ticket 15: Retrieval evaluation with a fixed question set and Hit@k
-- [ ] Ticket 16: Regression tests using a golden evaluation dataset
-- [ ] Ticket 17: Experiments with retrieval top-k and similarity thresholds
-- [ ] Ticket 18: Replace the JSON embedding cache with a vector database
-- [ ] Ticket 19: Metadata filtering and hybrid text/vector search
-- [ ] Ticket 20: Rerank retrieved document chunks
-- [ ] Ticket 21: Explore model types and their intended use cases
-- [ ] Ticket 22: Choose models using quality, cost, and latency measurements
-- [ ] Ticket 23: Prompt engineering and systematic prompt comparison
-- [ ] Ticket 24: Generation controls: temperature, top-p, and sampling behavior
-- [ ] Ticket 25: Context engineering: token budgets, selection, and compression
-- [ ] Ticket 26: Multimodal RAG using text and image inputs
-- [ ] Ticket 27: Fine-tuning fundamentals and training dataset preparation
-- [ ] Ticket 28: Build an AI agent that can use tools
-- [ ] Ticket 29: Expose the knowledge assistant through an MCP server
-- [ ] Ticket 30: Let the agent use external MCP servers
-- [ ] Ticket 31: AI safety, prompt injection protection, privacy, and ethics
-- [ ] Ticket 32: LLM observability for latency, token usage, costs, and tracing
-- [ ] Ticket 33: End-to-end evaluations and final regression test suite
+✔ Ticket 1: Load Markdown documents from a directory @done(26-09-03 22:51)
+✔ Ticket 2: Represent documents with a `Document` dataclass @done(26-09-03 22:51)
+✔ Ticket 3: Split documents into `DocumentChunk` objects @done(26-09-03 22:51)
+✔ Ticket 4: Add simple keyword-based text search @done(26-09-03 22:51)
+✔ Ticket 5: Split the application into Python modules @done(26-09-03 22:51)
+✔ Ticket 6: Configure the project and virtual environment with `uv` @done(26-09-03 22:52)
+✔ Ticket 7: Generate document chunk embeddings with OpenAI @done(26-09-03 22:52)
+✔ Ticket 8: Add semantic search using cosine similarity @done(26-09-03 22:52)
+✔ Ticket 9: Generate grounded answers from retrieved context @done(26-09-03 22:52)
+✔ Ticket 10: Connect retrieval and generation into a complete RAG flow @done(26-09-03 22:52)
+✔ Ticket 11: Cache document embeddings on disk @done(26-09-03 22:52)
+✔ Ticket 12: Handle API errors and CLI exit codes @done(26-09-03 22:52)
+✔ Ticket 13: Add unit tests without real API requests @done(26-09-03 22:52)
+✔ Ticket 14: Configure operational settings with environment variables @done(26-09-03 22:52)
+✔ Ticket 15: Retrieval evaluation with a fixed question set and Hit@k @done(26-09-03 22:51)
+☐ Ticket 16: Regression tests using a golden evaluation dataset
+☐ Ticket 17: Experiments with retrieval top-k and similarity thresholds
+☐ Ticket 18: Replace the JSON embedding cache with a vector database
+☐ Ticket 19: Metadata filtering and hybrid text/vector search
+☐ Ticket 20: Rerank retrieved document chunks
+☐ Ticket 21: Explore model types and their intended use cases
+☐ Ticket 22: Choose models using quality, cost, and latency measurements
+☐ Ticket 23: Prompt engineering and systematic prompt comparison
+☐ Ticket 24: Generation controls: temperature, top-p, and sampling behavior
+☐ Ticket 25: Context engineering: token budgets, selection, and compression
+☐ Ticket 26: Multimodal RAG using text and image inputs
+☐ Ticket 27: Fine-tuning fundamentals and training dataset preparation
+☐ Ticket 28: Build an AI agent that can use tools
+☐ Ticket 29: Expose the knowledge assistant through an MCP server
+☐ Ticket 30: Let the agent use external MCP servers
+☐ Ticket 31: AI safety, prompt injection protection, privacy, and ethics
+☐ Ticket 32: LLM observability for latency, token usage, costs, and tracing
+☐ Ticket 33: End-to-end evaluations and final regression test suite

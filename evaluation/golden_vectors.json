@@ -1,0 +1,16 @@
+{
+  "documents": {
+    "documents/embeddings.md": [1.0, 0.0, 0.0, 0.0, 0.0],
+    "documents/vector-search.md": [0.0, 1.0, 0.0, 0.0, 0.0],
+    "documents/chunking.md": [0.0, 0.0, 1.0, 0.0, 0.0],
+    "documents/rag.md": [0.0, 0.0, 0.0, 1.0, 0.0],
+    "documents/python.md": [0.0, 0.0, 0.0, 0.0, 1.0]
+  },
+  "questions": {
+    "Jak tekst może zostać przedstawiony jako liczby?": [1.0, 0.0, 0.0, 0.0, 0.0],
+    "Jak znaleźć podobne znaczeniowo fragmenty?": [0.0, 1.0, 0.0, 0.0, 0.0],
+    "Po co dzielić dokument na mniejsze części?": [0.0, 0.0, 1.0, 0.0, 0.0],
+    "Jak działa pobieranie kontekstu przed odpowiedzią modelu?": [0.0, 0.0, 0.0, 1.0, 0.0],
+    "Do czego wykorzystuje się środowiska wirtualne?": [0.0, 0.0, 0.0, 0.0, 1.0]
+  }
+}
